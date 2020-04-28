@@ -9,6 +9,7 @@ import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
@@ -24,6 +25,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Array;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -33,9 +35,11 @@ import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity {
 
-    private String[] names = {"Super Berget", "Berget Klara", "Berg x100"};
-    private ArrayList<String> listData = new ArrayList<String>();
-    ArrayAdapter<String> adapter;
+    //
+    private ArrayList<String> mountainName = new ArrayList<String>();
+    private ArrayList<String> mountainID = new ArrayList<String>();
+    private ArrayList<String> mountainSize = new ArrayList<String>();
+    private ArrayAdapter<String> adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,9 +47,21 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         //ListView
-        adapter = new ArrayAdapter<String>(getApplicationContext(),R.layout.listview,R.id.listitem,listData);
+        adapter = new ArrayAdapter<String>(getApplicationContext(),R.layout.listview,R.id.listitem,mountainName);
         ListView mylistview = findViewById(R.id.listview);
         mylistview.setAdapter(adapter);
+
+        mylistview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                toast(
+                        "ID: " + mountainID.get(position) +
+                                " | Name: " + mountainName.get(position) +
+                                " | Size: " + mountainSize.get(position)
+
+                );
+            }
+        });
 
         //Refresh button
         Button btn = findViewById(R.id.button);
@@ -55,6 +71,14 @@ public class MainActivity extends AppCompatActivity {
                 new JsonTask().execute("https://wwwlab.iit.his.se/brom/kurser/mobilprog/dbservice/admin/getdataasjson.php?type=brom");
             }
         });
+    }
+
+    private void toast(String string){
+        Context context = getApplicationContext();
+        CharSequence text = string;
+        int duration = Toast.LENGTH_SHORT;
+        Toast toast = Toast.makeText(context, text, duration);
+        toast.show();
     }
 
     @SuppressLint("StaticFieldLeak")
@@ -123,13 +147,18 @@ public class MainActivity extends AppCompatActivity {
             }
 
             try{
-                listData.clear();
+                mountainName.clear();
+                mountainID.clear();
+                mountainSize.clear();
                 JSONArray jsonArray = new JSONArray(result);
                 for (int i = 0; i < jsonArray.length(); i++){
                     JSONObject jsonObject = jsonArray.getJSONObject(i);
+                    final String id = jsonObject.getString("ID");
                     final String name = jsonObject.getString("name");
-                    listData.add(name);
-                    toast(name);
+                    final String size = jsonObject.getString("size");
+                    mountainName.add(name);
+                    mountainID.add(id);
+                    mountainSize.add(size);
                 }
                 adapter.notifyDataSetChanged();
                 toast("Refresh Complete");
@@ -137,13 +166,6 @@ public class MainActivity extends AppCompatActivity {
             catch (JSONException e){
                 e.printStackTrace();
             }
-        }
-        private void toast(String string){
-            Context context = getApplicationContext();
-            CharSequence text = string;
-            int duration = Toast.LENGTH_SHORT;
-            Toast toast = Toast.makeText(context, text, duration);
-            toast.show();
         }
     }
 }
