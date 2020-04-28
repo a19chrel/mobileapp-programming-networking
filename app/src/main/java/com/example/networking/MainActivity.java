@@ -4,13 +4,20 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.w3c.dom.Text;
 
 import java.io.BufferedReader;
@@ -21,14 +28,26 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.CollationElementIterator;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity {
+
+    private String[] names = {"Super Berget", "Berget Klara", "Berg x100"};
+    private ArrayList<String> listData = new ArrayList<String>();
+    ArrayAdapter<String> adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        //ListView
+        adapter = new ArrayAdapter<String>(getApplicationContext(),R.layout.listview,R.id.listitem,listData);
+        ListView mylistview = findViewById(R.id.listview);
+        mylistview.setAdapter(adapter);
+
+        //Refresh button
         Button btn = findViewById(R.id.button);
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -98,13 +117,33 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(String result) {
 
-            TextView textView = findViewById(R.id.textView);
-
             super.onPostExecute(result);
             if (progressDialog.isShowing()) {
                 progressDialog.dismiss();
             }
-            textView.setText(result);
+
+            try{
+                listData.clear();
+                JSONArray jsonArray = new JSONArray(result);
+                for (int i = 0; i < jsonArray.length(); i++){
+                    JSONObject jsonObject = jsonArray.getJSONObject(i);
+                    final String name = jsonObject.getString("name");
+                    listData.add(name);
+                    toast(name);
+                }
+                adapter.notifyDataSetChanged();
+                toast("Refresh Complete");
+            }
+            catch (JSONException e){
+                e.printStackTrace();
+            }
+        }
+        private void toast(String string){
+            Context context = getApplicationContext();
+            CharSequence text = string;
+            int duration = Toast.LENGTH_SHORT;
+            Toast toast = Toast.makeText(context, text, duration);
+            toast.show();
         }
     }
 }
