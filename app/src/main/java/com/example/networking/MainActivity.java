@@ -13,32 +13,27 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.w3c.dom.Text;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.reflect.Array;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.CollationElementIterator;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    //
-    private ArrayList<String> mountainName = new ArrayList<String>();
-    private ArrayList<String> mountainID = new ArrayList<String>();
-    private ArrayList<String> mountainSize = new ArrayList<String>();
+    private ArrayList<String> mountainName = new ArrayList<>();
+    private List<Mountain> mountainList = new ArrayList<>();
     private ArrayAdapter<String> adapter;
 
     @Override
@@ -47,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         //ListView
-        adapter = new ArrayAdapter<String>(getApplicationContext(),R.layout.listview,R.id.listitem,mountainName);
+        adapter = new ArrayAdapter<>(getApplicationContext(),R.layout.listview,R.id.listitem,mountainName);
         ListView mylistview = findViewById(R.id.listview);
         mylistview.setAdapter(adapter);
 
@@ -55,9 +50,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 toast(
-                        "ID: " + mountainID.get(position) +
-                                " | Name: " + mountainName.get(position) +
-                                " | Size: " + mountainSize.get(position)
+                        "ID: " + mountainList.get(position).getId() +
+                                "\nName: " + mountainList.get(position).getName() +
+                                "\nSize: " + mountainList.get(position).getSize()
 
                 );
             }
@@ -148,17 +143,18 @@ public class MainActivity extends AppCompatActivity {
 
             try{
                 mountainName.clear();
-                mountainID.clear();
-                mountainSize.clear();
+                mountainList.clear();
                 JSONArray jsonArray = new JSONArray(result);
                 for (int i = 0; i < jsonArray.length(); i++){
                     JSONObject jsonObject = jsonArray.getJSONObject(i);
                     final String id = jsonObject.getString("ID");
                     final String name = jsonObject.getString("name");
-                    final String size = jsonObject.getString("size");
+                    final int size = jsonObject.getInt("size");
                     mountainName.add(name);
-                    mountainID.add(id);
-                    mountainSize.add(size);
+
+                    Mountain m = new Mountain(id, name, size);
+                    mountainList.add(m);
+
                 }
                 adapter.notifyDataSetChanged();
                 toast("Refresh Complete");
